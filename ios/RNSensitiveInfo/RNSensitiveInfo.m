@@ -107,11 +107,19 @@ RCT_EXPORT_METHOD(setItem:(NSString*)key value:(NSString*)value options:(NSDicti
     if (keychainService == NULL) {
         keychainService = @"app";
     }
+    
+    NSString* generic = [RCTConvert NSString:options[@"generic"]];
+    if (generic == NULL) {
+        generic = value;
+    }
 
     NSData* valueData = [value dataUsingEncoding:NSUTF8StringEncoding];
+    NSData* genericData = [generic dataUsingEncoding:NSUTF8StringEncoding];
+    
     NSMutableDictionary* query = [NSMutableDictionary dictionaryWithObjectsAndKeys:
                                       (__bridge id)(kSecClassGenericPassword), kSecClass,
                                       keychainService, kSecAttrService,
+                                      genericData, kSecAttrGeneric,
                                       valueData, kSecValueData,
                                       key, kSecAttrAccount, nil];
 
@@ -218,7 +226,7 @@ RCT_EXPORT_METHOD(getAllItems:(NSDictionary *)options resolver:(RCTPromiseResolv
                   [finalItem setObject:(NSString*)[item objectForKey:(__bridge id)(kSecAttrService)] forKey:@"service"];
                   [finalItem setObject:(NSString*)[item objectForKey:(__bridge id)(kSecAttrAccount)] forKey:@"key"];
                   [finalItem setObject:[[NSString alloc] initWithData:[item objectForKey:(__bridge id)(kSecValueData)] encoding:NSUTF8StringEncoding] forKey:@"value"];
-
+                  [finalItem setObject:[[NSString alloc] initWithData:[item objectForKey:(__bridge id)(kSecAttrGeneric)] encoding:NSUTF8StringEncoding] forKey:@"generic"];
                   [finalResult addObject: finalItem];
                 }
                 @catch(NSException *exception){} // Ignore items with weird keys or values
